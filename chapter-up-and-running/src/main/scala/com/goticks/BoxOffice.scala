@@ -6,10 +6,16 @@ import akka.actor._
 import akka.util.Timeout
 
 object BoxOffice {
+  // Note: Props is the apply method defined in specific object.
+  // Note: new BoxOffice is the
   def props(implicit timeout: Timeout) = Props(new BoxOffice)
   def name = "boxOffice"
 
-
+  // Note: name and event below are the same meaning if Event exists
+  // Note: name is used when we do event operation.
+  // Note: event is used when we do ticket operation.
+  // Note: Anyway, we will check if the existing of Event before event or
+  // Note: ticket operation.
   case class CreateEvent(name: String, tickets: Int)
   case class GetEvent(name: String)
   case object GetEvents
@@ -31,6 +37,8 @@ class BoxOffice(implicit timeout: Timeout) extends Actor {
 
 
   def createTicketSeller(name: String) =
+    // Note: context is the running context when actor receiving some event.
+    // Note: context contains things like event sender.
     context.actorOf(TicketSeller.props(name), name)
 
   def receive = {
@@ -43,6 +51,8 @@ class BoxOffice(implicit timeout: Timeout) extends Actor {
         eventTickets ! TicketSeller.Add(newTickets)
         sender() ! EventCreated(Event(name, tickets))
       }
+      // Note: child(name) will return an child ActorRef of Optional form.
+      // Note: fold: create one if not exists or call sender that event exists.
       context.child(name).fold(create())(_ => sender() ! EventExists)
 
 
@@ -50,7 +60,9 @@ class BoxOffice(implicit timeout: Timeout) extends Actor {
     case GetTickets(event, tickets) =>
       def notFound() = sender() ! TicketSeller.Tickets(event)
       def buy(child: ActorRef) =
-        child.forward(TicketSeller.Buy(tickets))
+        // Note: forward means the actor itself behaves like a proxy between sender and child,
+        // Note: The response of child will be directly send to sender.
+        child.forward(TicketSeller.Buy(tickets)) // Note: When code reach here, the child ActorRef is already present.
 
       context.child(event).fold(notFound())(buy)
 

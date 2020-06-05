@@ -5,6 +5,9 @@ import scala.concurrent.Future
 import akka.actor._
 import akka.util.Timeout
 
+/**
+ * Note: All
+ */
 object BoxOffice {
   def props(implicit timeout: Timeout) = Props(new BoxOffice)
   def name = "boxOffice"
